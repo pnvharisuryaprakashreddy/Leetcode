@@ -1,39 +1,42 @@
 class Solution {
     public char processStr(String s, long k) {
         int n = s.length();
-        long[] lens = new long[n];
-        long len = 0;
+        long[] len = new long[n];
+        long cur = 0;
 
         for (int i = 0; i < n; i++) {
-            char c = s.charAt(i);
-            if (c == '*')
-                len = Math.max(len - 1, 0L);
-            else if (c == '#')
-                len *= 2;
-            else if (c != '%')
-                len++;
-            
-            lens[i] = len;
+            char ch = s.charAt(i);
+
+            if (ch >= 'a' && ch <= 'z') {
+                cur++;
+            } 
+            else if (ch == '*') {
+                if (cur > 0) cur--;
+            } 
+            else if (ch == '#') {
+                cur = Math.min(cur * 2, (long)1e15);
+            }
+
+            len[i] = cur;
         }
 
-        if (k >= len) return '.';
+        if (k >= cur) return '.';
 
-        for (int i = n - 1; ; i--) {
-            char c = s.charAt(i);
-            switch (c) {
-                case '*':
-                    break;
-                case '#':
-                    if (k >= lens[i] / 2)
-                        k -= lens[i] / 2;
-                    break;
-                case '%':
-                    k = lens[i] - 1 - k;
-                    break;
-                default:
-                    if (lens[i] == k + 1)
-                        return c;
+        for (int i = n - 1; i >= 0; i--) {
+            char ch = s.charAt(i);
+
+            if (ch >= 'a' && ch <= 'z') {
+                if (len[i] - 1 == k) return ch;
+            } 
+            else if (ch == '#') {
+                long prev = len[i] / 2;
+                if (k >= prev) k -= prev;
+            } 
+            else if (ch == '%') {
+                k = len[i] - 1 - k;
             }
         }
+
+        return '.';
     }
 }
