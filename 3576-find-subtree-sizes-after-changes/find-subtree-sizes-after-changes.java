@@ -1,66 +1,31 @@
-import java.util.*;
-
 class Solution {
-    List<Integer>[] adj;
-    List<Integer>[] tree;
-    int[] ans;
-    int[] nearest = new int[26];
-
     public int[] findSubtreeSizes(int[] parent, String s) {
         int n = parent.length;
-
-        adj = new ArrayList[n];
-        tree = new ArrayList[n];
-        ans = new int[n];
-
-        for (int i = 0; i < n; i++) {
-            adj[i] = new ArrayList<>();
-            tree[i] = new ArrayList<>();
-        }
-
-        for (int i = 1; i < n; i++) {
-            adj[parent[i]].add(i);
-        }
-
-        Arrays.fill(nearest, -1);
-
-        changeTree(0, parent, s);
-
-        for (int i = 1; i < n; i++) {
-            tree[parent[i]].add(i);
-        }
-
-        calculate(0);
-
-        return ans;
-    }
-
-    void changeTree(int node, int[] parent, String s) {
-        int ch = s.charAt(node) - 'a';
-        int old = nearest[ch];
-
-        nearest[ch] = node;
-
-        for (int child : adj[node]) {
-            int c = s.charAt(child) - 'a';
-
-            if (nearest[c] != -1) {
-                parent[child] = nearest[c];
+        List<List<Integer>> children = new ArrayList<>();
+        for (int x = 0; x < n; x++)
+            children.add(new ArrayList<>());
+        for (int x = 1; x < n; x++)
+            children.get(parent[x]).add(x);
+        int[] size = new int[n], above = new int[n], last = new int[26];  // last[c]: the deepest node with letter c on the path from the root
+        Arrays.fill(size, 1);
+        Arrays.fill(last, -1);
+        Deque<Integer> stack = new ArrayDeque<>(List.of(0));  // x enters x, ~x leaves it: no recursion, so no stack overflow on a deep tree
+        while (!stack.isEmpty()) {
+            int x = stack.pop();
+            if (x >= 0) {
+                int c = s.charAt(x) - 'a';
+                above[x] = last[c];  // the closest ancestor with the same letter, or -1
+                last[c] = x;
+                stack.push(~x);  // leave x after all its children
+                for (int child : children.get(x))
+                    stack.push(child);
+            } else {
+                x = ~x;
+                last[s.charAt(x) - 'a'] = above[x];
+                if (x > 0)  // the root has no parent
+                    size[above[x] >= 0 ? above[x] : parent[x]] += size[x];
             }
-
-            changeTree(child, parent, s);
         }
-
-        nearest[ch] = old;
-    }
-
-    int calculate(int node) {
-        ans[node] = 1;
-
-        for (int child : tree[node]) {
-            ans[node] += calculate(child);
-        }
-
-        return ans[node];
+        return size;
     }
 }
